@@ -24,3 +24,6 @@ cert_stats-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Extra build targets.
+src/read_cert
