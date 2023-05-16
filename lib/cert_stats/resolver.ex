@@ -36,16 +36,24 @@ defmodule CertStats.Resolver do
   end
 
   defp get_cache(hostname, pid) do
-    case GenServer.call(pid, {:get, hostname}) do
-      {:ok, addrs} ->
-        Logger.info(@log_prefix <> "Found domain #{inspect(hostname)} in cache.")
-        addrs
+    if cache_available?(pid) do
+      case GenServer.call(pid, {:get, hostname}) do
+        {:ok, addrs} ->
+          Logger.info(@log_prefix <> "Found domain #{inspect(hostname)} in cache.")
+          addrs
 
-      {:error, :not_found} ->
-        Logger.error(@log_prefix <> "Domain #{inspect(hostname)} not found in DNS cache.")
-        nil
+        {:error, :not_found} ->
+          Logger.error(@log_prefix <> "Domain #{inspect(hostname)} not found in DNS cache.")
+          nil
+      end
+    else
+      nil
     end
   end
+
+  defp cache_available?(__MODULE__), do: Application.get_env(:cert_stats, :resolver, true)
+  # If an explicit PID is passed, assume caching is enabled.
+  defp cache_available?(pid) when is_pid(pid), do: true
 
   @impl true
   def init(_) do

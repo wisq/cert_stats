@@ -1,5 +1,8 @@
 %{
+  "briefly": {:hex, :briefly, "0.4.1", "c90c0511e64bde1fe8da7e244e14acf5bc78c3f6d033db778205e1fa2feafa5c", [:mix], [], "hexpm", "fc0cafcd19c4ed0d0906ae5cf627cc6ce76b8652a160c6bde0ab9d77304ebb0a"},
   "dogstatsd": {:hex, :dogstatsd, "0.0.4", "32574b218ce1bf61c50a957c08f12280dec674ca1ea2f168ac26557bdf3a5c88", [:mix], [], "hexpm", "fd179c7fe3cff2f9332c7b4166a13bd6ffe5397d903dc4a58723c04a4053dc8b"},
+  "ex_git_test": {:hex, :ex_git_test, "0.1.2", "414bea125357a472d00c1fa5789fc2ed7b31ef0a1ab9c57ff91ded0f5e55b45d", [:mix], [{:briefly, "~> 0.4.0", [hex: :briefly, repo: "hexpm", optional: false]}], "hexpm", "bcef00597db796ba15c82f4086a2c66bc4462df22a6ea49531fc957af8e61d76"},
   "file_system": {:hex, :file_system, "0.2.10", "fb082005a9cd1711c05b5248710f8826b02d7d1784e7c3451f9c1231d4fc162d", [:mix], [], "hexpm", "41195edbfb562a593726eda3b3e8b103a309b733ad25f3d642ba49696bf715dc"},
+  "mix_test_watch": {:hex, :mix_test_watch, "1.1.0", "330bb91c8ed271fe408c42d07e0773340a7938d8a0d281d57a14243eae9dc8c3", [:mix], [{:file_system, "~> 0.2.1 or ~> 0.3", [hex: :file_system, repo: "hexpm", optional: false]}], "hexpm", "52b6b1c476cbb70fd899ca5394506482f12e5f6b0d6acff9df95c7f1e0812ec3"},
   "x509": {:hex, :x509, "0.8.6", "f36fa9d276ec2440a6e56fa033866ba7194b60352e58fc18243be3e3dbfbb44e", [:mix], [], "hexpm", "b713451273647f766808a2fc969b3ffc29d248a9c635d9a79d54010b10e42ac5"},
 }
