@@ -15,7 +15,8 @@ defmodule CertStats.Statsd do
 
   def start_link(opts \\ []) do
     opts = Keyword.put_new(opts, :name, __MODULE__)
-    DogStatsd.start_link(%{}, opts)
+    dd_opts = Keyword.take(opts, [:host, :port]) |> Map.new()
+    DogStatsd.start_link(dd_opts, opts)
   end
 
   def record_cert(module, cert, statsd \\ __MODULE__) do
