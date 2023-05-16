@@ -10,7 +10,8 @@ defmodule CertStats.Method.HTTPS do
       host: nil,
       ip: nil,
       port: 443,
-      cert_host: nil
+      cert_host: nil,
+      timeout: 10_000
     )
 
     def validate(c) do
@@ -45,8 +46,8 @@ defmodule CertStats.Method.HTTPS do
   def fetch_cert(%Config{} = config) do
     with {:ok, addrs} <- find_ip_addrs(config),
          addr <- Enum.random(addrs),
-         {:ok, socket} <- :gen_tcp.connect(addr, config.port, [:binary]),
-         {:ok, cert} <- SSL.fetch_cert(socket, config.cert_host) do
+         {:ok, socket} <- :gen_tcp.connect(addr, config.port, [:binary], config.timeout),
+         {:ok, cert} <- SSL.fetch_cert(socket, config.cert_host, config.timeout) do
       :ok = :gen_tcp.close(socket)
       {:ok, cert}
     end

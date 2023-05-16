@@ -1,15 +1,15 @@
 defmodule CertStats.SSL do
   require Logger
 
-  def fetch_cert(socket, hostname) do
-    with {:ok, _} <- ssl_connect_for_cert(socket, hostname),
+  def fetch_cert(socket, hostname, timeout \\ 10_000) do
+    with {:ok, _} <- ssl_connect_for_cert(socket, hostname, timeout),
          {:ok, cert} <- receive_cert() do
       {:ok, cert}
     end
   end
 
-  defp ssl_connect_for_cert(socket, hostname) do
-    :ssl.connect(socket,
+  defp ssl_connect_for_cert(socket, hostname, timeout) do
+    ssl_opts = [
       versions: [:"tlsv1.2"],
       ciphers: :ssl.cipher_suites(:default, :"tlsv1.2"),
       depth: 3,
@@ -17,7 +17,9 @@ defmodule CertStats.SSL do
       verify_fun: {&verify/3, self()},
       server_name_indication: String.to_charlist(hostname),
       customize_hostname_check: [match_fun: :public_key.pkix_verify_hostname_match_fun(:https)]
-    )
+    ]
+
+    :ssl.connect(socket, ssl_opts, timeout)
   end
 
   defp receive_cert do
