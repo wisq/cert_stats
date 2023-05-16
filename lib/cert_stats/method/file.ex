@@ -53,7 +53,7 @@ defmodule CertStats.Method.File do
 
       {_, code} ->
         Logger.error("Command #{inspect([cmd | args])} returned code #{code}")
-        {:error, :nonzero_exit_code}
+        {:error, :command_failed}
     end
   end
 
