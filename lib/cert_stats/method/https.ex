@@ -19,6 +19,7 @@ defmodule CertStats.Method.HTTPS do
       is_nil(c.ip) || :inet.is_ip_address(c.ip) || invalid(c, :ip)
       is_integer(c.port) || invalid(c, :port)
       is_nil(c.cert_host) || is_binary(c.cert_host) || invalid(c, :cert_host)
+      is_integer(c.timeout) || invalid(c, :timeout)
 
       %Config{c | cert_host: c.cert_host || c.host}
     end

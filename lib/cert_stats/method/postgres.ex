@@ -10,7 +10,8 @@ defmodule CertStats.Method.Postgres do
       host: nil,
       ip: nil,
       port: 5432,
-      cert_host: nil
+      cert_host: nil,
+      timeout: 10_000
     )
 
     def validate(c) do
@@ -18,6 +19,7 @@ defmodule CertStats.Method.Postgres do
       is_nil(c.ip) || :inet.is_ip_address(c.ip) || invalid(c, :ip)
       is_integer(c.port) || invalid(c, :port)
       is_nil(c.cert_host) || is_binary(c.cert_host) || invalid(c, :cert_host)
+      is_integer(c.timeout) || invalid(c, :timeout)
 
       %Config{c | cert_host: c.cert_host || c.host}
     end
@@ -45,9 +47,9 @@ defmodule CertStats.Method.Postgres do
   def fetch_cert(config) do
     with {:ok, addrs} <- find_ip_addrs(config),
          addr <- Enum.random(addrs),
-         {:ok, socket} <- :gen_tcp.connect(addr, config.port, [:binary]),
-         :ok <- start_tls(socket),
-         {:ok, cert} <- SSL.fetch_cert(socket, config.cert_host) do
+         {:ok, socket} <- :gen_tcp.connect(addr, config.port, [:binary], config.timeout),
+         :ok <- start_tls(socket, config.timeout),
+         {:ok, cert} <- SSL.fetch_cert(socket, config.cert_host, config.timeout) do
       :ok = :gen_tcp.close(socket)
       {:ok, cert}
     end
@@ -59,7 +61,7 @@ defmodule CertStats.Method.Postgres do
   # Based on https://github.com/openssl/openssl/pull/683/files
   @tls_request <<0, 0, 0, 8, 4, 210, 22, 47>>
 
-  defp start_tls(socket) do
+  defp start_tls(socket, timeout) do
     :ok = :gen_tcp.send(socket, @tls_request)
 
     receive do
@@ -67,7 +69,7 @@ defmodule CertStats.Method.Postgres do
       {:tcp, ^socket, "N"} -> {:error, :tls_not_enabled}
       {:tcp, ^socket, msg} -> raise "Unknown response from Postgres: #{inspect(msg)}"
     after
-      5000 -> {:error, :timeout}
+      timeout -> {:error, :timeout}
     end
   end
 end
