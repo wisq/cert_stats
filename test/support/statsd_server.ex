@@ -1,4 +1,4 @@
-defmodule CSTest.MockStatsd do
+defmodule CSTest.StatsdServer do
   use GenServer, restart: :temporary
 
   def start_link(opts) do

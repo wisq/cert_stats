@@ -4,7 +4,7 @@ defmodule CertStats.StatsdTest do
 
   alias CertStats.Statsd
   alias CertStats.SSL
-  alias CSTest.MockStatsd
+  alias CSTest.StatsdServer
 
   defmodule DummyMethod do
     def statsd_tag, do: "dummy"
@@ -23,7 +23,7 @@ defmodule CertStats.StatsdTest do
     assert [
              {:g, {"tls.cert.created", created}, tags},
              {:g, {"tls.cert.expires", expires}, tags}
-           ] = MockStatsd.next_message(mock)
+           ] = StatsdServer.next_message(mock)
 
     # Created just now:
     assert_in_delta String.to_float(created), 0.0, 0.01
@@ -39,7 +39,7 @@ defmodule CertStats.StatsdTest do
 
     log = capture_log(fn -> Statsd.record_watchdog(5, 5, statsd) end)
 
-    assert [{:g, {"tls.cert.success_rate", rate}, []}] = MockStatsd.next_message(mock)
+    assert [{:g, {"tls.cert.success_rate", rate}, []}] = StatsdServer.next_message(mock)
     assert_in_delta String.to_float(rate), 100.0, 0.001
 
     assert log =~ "[info]"
@@ -51,7 +51,7 @@ defmodule CertStats.StatsdTest do
 
     log = capture_log(fn -> Statsd.record_watchdog(3, 9, statsd) end)
 
-    assert [{:g, {"tls.cert.success_rate", rate}, []}] = MockStatsd.next_message(mock)
+    assert [{:g, {"tls.cert.success_rate", rate}, []}] = StatsdServer.next_message(mock)
     assert_in_delta String.to_float(rate), 33.333, 0.001
 
     assert log =~ "[warning]"
@@ -59,8 +59,8 @@ defmodule CertStats.StatsdTest do
   end
 
   defp setup_mock_statsd do
-    {:ok, mock} = start_supervised(MockStatsd)
-    port = MockStatsd.get_port(mock)
+    {:ok, mock} = start_supervised(StatsdServer)
+    port = StatsdServer.get_port(mock)
     {:ok, statsd} = start_supervised({Statsd, port: port})
 
     {mock, statsd}
