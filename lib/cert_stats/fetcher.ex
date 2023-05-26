@@ -56,9 +56,20 @@ defmodule CertStats.Fetcher do
 
   @impl true
   def handle_info(:timeout, state) do
-    {:ok, cert} = state.module.fetch_cert(state.config)
-    CertStats.Statsd.record_cert(state.module, cert, state.statsd)
-    CertStats.Watchdog.success(state.watchdog_id, max_timeout(state.repeat_ms), state.watchdog)
+    case state.module.fetch_cert(state.config) do
+      {:ok, cert} ->
+        CertStats.Statsd.record_cert(state.module, cert, state.statsd)
+
+        CertStats.Watchdog.success(
+          state.watchdog_id,
+          max_timeout(state.repeat_ms),
+          state.watchdog
+        )
+
+      {:error, err} ->
+        Logger.error("Failed to retrieve #{inspect(state.watchdog_id)} cert: #{inspect(err)}")
+    end
+
     {:noreply, state, random_timeout(state.repeat_ms)}
   end
 

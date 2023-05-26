@@ -5,8 +5,12 @@ defmodule CSTest.MockWatchdog do
     GenServer.start_link(__MODULE__, nil, opts)
   end
 
-  def next_message(pid) do
-    GenServer.call(pid, :next_message)
+  def next_message(pid, timeout \\ 5000) do
+    GenServer.call(pid, :next_message, timeout)
+  end
+
+  def flush_messages(pid) do
+    GenServer.call(pid, :flush_messages)
   end
 
   defmodule State do
@@ -22,11 +26,16 @@ defmodule CSTest.MockWatchdog do
   end
 
   @impl true
-  def handle_call(:next_message, from, %State{waiting: nil} = state) do
+  def handle_call(:next_message, from, %State{} = state) do
     case :queue.out(state.messages) do
       {{:value, msg}, new_msgs} -> {:reply, msg, %State{state | messages: new_msgs}}
       {:empty, _} -> {:noreply, %State{state | waiting: from}}
     end
+  end
+
+  @impl true
+  def handle_call(:flush_messages, _from, %State{} = state) do
+    {:reply, :ok, %State{state | messages: :queue.new()}}
   end
 
   @impl true
