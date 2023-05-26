@@ -2,6 +2,7 @@ defmodule CertStats.Watchdog do
   use GenServer
   require Logger
 
+  @default_name __MODULE__
   @default_period_ms 60_000
 
   # To turn a timeout (milliseconds) into a deadline,
@@ -20,14 +21,12 @@ defmodule CertStats.Watchdog do
     )
   end
 
-  def default_name, do: __MODULE__
-
   def start_link(opts \\ []) do
     {period_ms, opts} = Keyword.pop(opts, :period_ms, @default_period_ms)
     {dead_fudge, opts} = Keyword.pop(opts, :deadline_fudge_factor, @default_deadline_fudge_factor)
     {dead_min, opts} = Keyword.pop(opts, :deadline_minimum, @default_deadline_minimum)
 
-    opts = Keyword.put_new(opts, :name, default_name())
+    opts = Keyword.put_new(opts, :name, @default_name)
 
     state = %State{
       period_ms: period_ms,
@@ -38,11 +37,11 @@ defmodule CertStats.Watchdog do
     GenServer.start_link(__MODULE__, state, opts)
   end
 
-  def register(id, timeout_ms, server \\ default_name()) do
+  def register(id, timeout_ms, server \\ @default_name) do
     GenServer.cast(server, {:register, id, timeout_ms})
   end
 
-  def success(id, timeout_ms, server \\ default_name()) do
+  def success(id, timeout_ms, server \\ @default_name) do
     GenServer.cast(server, {:success, id, timeout_ms})
   end
 

@@ -33,44 +33,40 @@ defmodule CertStats.FetcherTest do
   end
 
   test "fetcher registers with watchdog at start" do
-    {:ok, watchdog} = setup_watchdog()
-    setup_fetcher(:some_id, :test_cert, watchdog: watchdog)
-    assert {:register, "mock-some_id", _} = MockWatchdog.next_message(watchdog)
+    {:ok, fetcher, _} = setup_fetcher(:some_id, :test_cert)
+    assert {:register, "mock-some_id", _} = MockWatchdog.next_call(fetcher)
   end
 
   test "fetcher records succesful fetches with watchdog" do
-    {:ok, watchdog} = setup_watchdog()
-
-    {:ok, _, ref} =
-      setup_fetcher(:on_off, :cert, watchdog: watchdog, initial_ms: 20, repeat_ms: 20)
+    {:ok, fetcher, ref} = setup_fetcher(:on_off, :cert, initial_ms: 20, repeat_ms: 20)
 
     # We get registration + repeated successes:
-    assert {:register, "mock-on_off", _} = MockWatchdog.next_message(watchdog)
-    assert {:success, "mock-on_off", _} = MockWatchdog.next_message(watchdog, 100)
-    assert {:success, "mock-on_off", _} = MockWatchdog.next_message(watchdog, 100)
-    assert {:success, "mock-on_off", _} = MockWatchdog.next_message(watchdog, 100)
+    assert {:register, "mock-on_off", _} = MockWatchdog.next_call(fetcher)
+    assert {:success, "mock-on_off", _} = MockWatchdog.next_call(fetcher, 100)
+    assert {:success, "mock-on_off", _} = MockWatchdog.next_call(fetcher, 100)
+    assert {:success, "mock-on_off", _} = MockWatchdog.next_call(fetcher, 100)
 
     log =
       capture_log(fn ->
         # Now fetches will fail:
         mock_method_return(ref, {:error, :some_error})
-        MockWatchdog.flush_messages(watchdog)
+        MockWatchdog.flush_messages(fetcher)
 
         # No messages for at least 100ms.
-        assert catch_exit(MockWatchdog.next_message(watchdog, 100))
+        assert MockWatchdog.next_call(fetcher, 100) == :timeout
 
         # Now fetches will succeed again:
         mock_method_return(ref, {:ok, :cert})
       end)
 
-    assert {:success, "mock-on_off", _} = MockWatchdog.next_message(watchdog, 100)
-    assert {:success, "mock-on_off", _} = MockWatchdog.next_message(watchdog, 100)
-    assert {:success, "mock-on_off", _} = MockWatchdog.next_message(watchdog, 100)
+    assert {:success, "mock-on_off", _} = MockWatchdog.next_call(fetcher, 100)
+    assert {:success, "mock-on_off", _} = MockWatchdog.next_call(fetcher, 100)
+    assert {:success, "mock-on_off", _} = MockWatchdog.next_call(fetcher, 100)
 
     assert log =~ "Failed to retrieve \"mock-on_off\" cert: :some_error"
   end
 
-  defp setup_fetcher(id, cert, opts) do
+  defp setup_fetcher(id, cert, opts \\ []) do
     opts = [statsd: {:stub, self()}] ++ opts
     ref = MockMethod.test_setup({:ok, cert})
 
@@ -85,9 +81,5 @@ defmodule CertStats.FetcherTest do
 
   defp mock_method_return(ref, rval) do
     MockMethod.test_replace(ref, rval)
-  end
-
-  defp setup_watchdog do
-    start_supervised(MockWatchdog)
   end
 end
