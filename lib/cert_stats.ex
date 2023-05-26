@@ -5,13 +5,11 @@ defmodule CertStats do
           {:ok, pid()} | {:ok, pid(), Application.state()} | {:error, reason :: term()}
   @impl true
   def start(_type, _args) do
-    children =
-      [
-        enabled?(:statsd) && CertStats.Statsd,
-        enabled?(:resolver) && CertStats.Resolver,
-        enabled?(:watchdog) && CertStats.Watchdog
-      ]
-      |> Enum.reject(&is_nil/1)
+    children = [
+      statsd(),
+      resolver(),
+      watchdog()
+    ]
 
     Supervisor.start_link(children ++ agent_children(), strategy: :one_for_one)
   end
@@ -23,10 +21,11 @@ defmodule CertStats do
     end)
   end
 
-  defp enabled?(key) do
-    case Application.get_env(:cert_stats, key, true) do
-      false -> nil
-      _ -> true
-    end
-  end
+  @statsd Application.compile_env(:cert_stats, :statsd, CertStats.Statsd)
+  @resolver Application.compile_env(:cert_stats, :resolver, CertStats.Resolver)
+  @watchdog Application.compile_env(:cert_stats, :watchdog, CertStats.Watchdog)
+
+  def statsd, do: @statsd
+  def resolver, do: @resolver
+  def watchdog, do: @watchdog
 end

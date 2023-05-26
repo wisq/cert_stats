@@ -3,7 +3,6 @@ defmodule CertStats.Watchdog do
   require Logger
 
   @default_period_ms 60_000
-  @default_statsd CertStats.Statsd.default_name()
 
   # To turn a timeout (milliseconds) into a deadline,
   #   add 150% (give them at least two cycles to report in)
@@ -12,13 +11,12 @@ defmodule CertStats.Watchdog do
   @default_deadline_minimum 30_000
 
   defmodule State do
-    @enforce_keys [:period_ms, :deadline_fudge_factor, :deadline_minimum, :statsd]
+    @enforce_keys [:period_ms, :deadline_fudge_factor, :deadline_minimum]
     defstruct(
       period_ms: nil,
       deadlines: %{},
       deadline_fudge_factor: nil,
-      deadline_minimum: nil,
-      statsd: nil
+      deadline_minimum: nil
     )
   end
 
@@ -26,7 +24,6 @@ defmodule CertStats.Watchdog do
 
   def start_link(opts \\ []) do
     {period_ms, opts} = Keyword.pop(opts, :period_ms, @default_period_ms)
-    {statsd, opts} = Keyword.pop(opts, :statsd, @default_statsd)
     {dead_fudge, opts} = Keyword.pop(opts, :deadline_fudge_factor, @default_deadline_fudge_factor)
     {dead_min, opts} = Keyword.pop(opts, :deadline_minimum, @default_deadline_minimum)
 
@@ -35,8 +32,7 @@ defmodule CertStats.Watchdog do
     state = %State{
       period_ms: period_ms,
       deadline_fudge_factor: dead_fudge,
-      deadline_minimum: dead_min,
-      statsd: statsd
+      deadline_minimum: dead_min
     }
 
     GenServer.start_link(__MODULE__, state, opts)
@@ -74,7 +70,7 @@ defmodule CertStats.Watchdog do
     healthy = Enum.count(state.deadlines, &is_healthy?(&1, now))
     total = Enum.count(state.deadlines)
 
-    CertStats.Statsd.record_watchdog(healthy, total, state.statsd)
+    CertStats.statsd().record_watchdog(healthy, total)
 
     Process.send_after(self(), :report, state.period_ms)
     {:noreply, state}

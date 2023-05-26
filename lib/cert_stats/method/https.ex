@@ -1,7 +1,6 @@
 defmodule CertStats.Method.HTTPS do
   @behaviour CertStats.Method
 
-  alias CertStats.Resolver
   alias CertStats.SSL
 
   defmodule Config do
@@ -54,6 +53,6 @@ defmodule CertStats.Method.HTTPS do
     end
   end
 
-  defp find_ip_addrs(%Config{ip: nil, host: host}), do: Resolver.resolve(host)
+  defp find_ip_addrs(%Config{ip: nil, host: host}), do: CertStats.resolver().resolve(host)
   defp find_ip_addrs(%Config{ip: ip}) when is_tuple(ip), do: {:ok, [ip]}
 end
