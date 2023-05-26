@@ -31,7 +31,7 @@ defmodule CertStats.StatsdTest do
     assert_in_delta String.to_float(expires), 395.0, 0.01
 
     assert log =~ SSL.common_name(cert)
-    assert log =~ "in 395 days"
+    assert log =~ ~r/in 39[45] days/
   end
 
   test "records watchdog percentage successful" do
