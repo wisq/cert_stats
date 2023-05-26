@@ -18,17 +18,19 @@ defmodule CertStats.Watchdog do
     )
   end
 
+  def default_name, do: __MODULE__
+
   def start_link(opts \\ []) do
     {period_ms, opts} = Keyword.pop(opts, :period_ms, @default_period_ms)
-    opts = Keyword.put_new(opts, :name, __MODULE__)
+    opts = Keyword.put_new(opts, :name, default_name())
     GenServer.start_link(__MODULE__, period_ms, opts)
   end
 
-  def register(id, timeout_ms, server \\ __MODULE__) do
+  def register(id, timeout_ms, server \\ default_name()) do
     GenServer.cast(server, {:register, id, to_deadline(timeout_ms)})
   end
 
-  def success(id, timeout_ms, server \\ __MODULE__) do
+  def success(id, timeout_ms, server \\ default_name()) do
     GenServer.cast(server, {:success, id, to_deadline(timeout_ms)})
   end
 

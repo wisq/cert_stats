@@ -6,6 +6,8 @@ defmodule CertStats.Statsd do
 
   alias CertStats.SSL
 
+  def default_name, do: __MODULE__
+
   def child_spec(opts) do
     %{
       id: __MODULE__,
@@ -14,12 +16,18 @@ defmodule CertStats.Statsd do
   end
 
   def start_link(opts \\ []) do
-    opts = Keyword.put_new(opts, :name, __MODULE__)
+    opts = Keyword.put_new(opts, :name, default_name())
     dd_opts = Keyword.take(opts, [:host, :port]) |> Map.new()
     DogStatsd.start_link(dd_opts, opts)
   end
 
-  def record_cert(module, cert, statsd \\ __MODULE__) do
+  def record_cert(module, cert, statsd \\ default_name())
+
+  def record_cert(module, cert, {:stub, pid}) do
+    send(pid, {:record_cert, module, cert})
+  end
+
+  def record_cert(module, cert, statsd) do
     {created, expires} = cert_validity(cert)
     now = DateTime.utc_now()
     create_days = created |> days_before(now)
@@ -44,7 +52,7 @@ defmodule CertStats.Statsd do
     end)
   end
 
-  def record_watchdog(healthy, total, statsd \\ __MODULE__)
+  def record_watchdog(healthy, total, statsd \\ default_name())
 
   def record_watchdog(0, 0, _) do
     Logger.warning("Watchdog: No registered clients.")

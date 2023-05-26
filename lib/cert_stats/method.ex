@@ -12,6 +12,7 @@ defmodule CertStats.Method do
   defp module(:file), do: Method.File
   defp module(:https), do: Method.HTTPS
   defp module(:postgres), do: Method.Postgres
+  if Mix.env() == :test, do: defp(module(:mock), do: CSTest.MockMethod)
   defp module(key), do: raise(ArgumentError, "Method not found: #{inspect(key)}")
 
   def configure(method, opts) do
