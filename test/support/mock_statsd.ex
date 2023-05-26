@@ -20,8 +20,12 @@ defmodule CSTest.MockStatsd do
     GenServer.cast(__MODULE__, {:record_watchdog, self(), healthy, total})
   end
 
-  def next_call(pid) do
-    GenServer.call(__MODULE__, {:next_call, pid})
+  def next_call(pid, timeout \\ 1000) do
+    try do
+      GenServer.call(__MODULE__, {:next_call, pid}, timeout)
+    catch
+      :exit, {:timeout, _} -> :timeout
+    end
   end
 
   defmodule State do

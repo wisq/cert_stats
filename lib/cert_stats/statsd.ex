@@ -6,7 +6,7 @@ defmodule CertStats.Statsd do
 
   alias CertStats.SSL
 
-  def default_name, do: __MODULE__
+  @default_name __MODULE__
 
   def child_spec(opts) do
     %{
@@ -16,12 +16,12 @@ defmodule CertStats.Statsd do
   end
 
   def start_link(opts \\ []) do
-    opts = Keyword.put_new(opts, :name, default_name())
+    opts = Keyword.put_new(opts, :name, @default_name)
     dd_opts = Keyword.take(opts, [:host, :port]) |> Map.new()
     DogStatsd.start_link(dd_opts, opts)
   end
 
-  def record_cert(module, cert, statsd \\ default_name())
+  def record_cert(module, cert, statsd \\ @default_name)
 
   def record_cert(module, cert, {:stub, pid}) do
     send(pid, {:record_cert, module, cert})
@@ -52,7 +52,7 @@ defmodule CertStats.Statsd do
     end)
   end
 
-  def record_watchdog(healthy, total, statsd \\ default_name())
+  def record_watchdog(healthy, total, statsd \\ @default_name)
 
   def record_watchdog(healthy, total, {:stub, pid}) do
     send(pid, {:record_watchdog, healthy, total})

@@ -4,7 +4,6 @@ defmodule CertStats.Fetcher do
 
   @default_initial_ms 60_000..90_000
   @default_repeat_ms 270_000..330_000
-  @default_statsd CertStats.Statsd.default_name()
   @default_watchdog CertStats.Watchdog.default_name()
 
   def child_spec([method, method_opts, fetcher_opts]) do
@@ -17,14 +16,13 @@ defmodule CertStats.Fetcher do
   end
 
   defmodule State do
-    @enforce_keys [:watchdog_id, :initial_ms, :repeat_ms, :module, :config, :statsd, :watchdog]
+    @enforce_keys [:watchdog_id, :initial_ms, :repeat_ms, :module, :config, :watchdog]
     defstruct(
       watchdog_id: nil,
       initial_ms: nil,
       repeat_ms: nil,
       module: nil,
       config: nil,
-      statsd: nil,
       watchdog: nil
     )
   end
@@ -32,7 +30,6 @@ defmodule CertStats.Fetcher do
   def start_link({watchdog_id, module, config}, opts \\ []) do
     {initial_ms, opts} = Keyword.pop(opts, :initial_ms, @default_initial_ms)
     {repeat_ms, opts} = Keyword.pop(opts, :repeat_ms, @default_repeat_ms)
-    {statsd, opts} = Keyword.pop(opts, :statsd, @default_statsd)
     {watchdog, opts} = Keyword.pop(opts, :watchdog, @default_watchdog)
 
     state = %State{
@@ -41,7 +38,6 @@ defmodule CertStats.Fetcher do
       repeat_ms: repeat_ms,
       module: module,
       config: config,
-      statsd: statsd,
       watchdog: watchdog
     }
 
@@ -58,7 +54,7 @@ defmodule CertStats.Fetcher do
   def handle_info(:timeout, state) do
     case state.module.fetch_cert(state.config) do
       {:ok, cert} ->
-        CertStats.Statsd.record_cert(state.module, cert, state.statsd)
+        CertStats.statsd().record_cert(state.module, cert)
 
         CertStats.Watchdog.success(
           state.watchdog_id,
