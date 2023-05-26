@@ -85,7 +85,7 @@ defmodule CertStats.FetcherTest do
   end
 
   defp setup_watchdog do
-    start_supervised(MockWatchdog, restart: :temporary)
+    start_supervised(MockWatchdog)
   end
 
   defp next_record_cert(timeout \\ 5000) do

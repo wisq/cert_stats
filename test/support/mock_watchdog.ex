@@ -1,5 +1,5 @@
 defmodule CSTest.MockWatchdog do
-  use GenServer
+  use GenServer, restart: :temporary
 
   def start_link(opts) do
     GenServer.start_link(__MODULE__, nil, opts)

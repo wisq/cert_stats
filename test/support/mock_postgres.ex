@@ -3,7 +3,7 @@
 # I've chosen to do some things differently,
 # e.g. avoiding using the undocumented :prim_inet API.
 defmodule CSTest.MockPostgres do
-  use GenServer
+  use GenServer, restart: :temporary
 
   def start_link({suite, opts}) do
     {tls_mode, opts} = Keyword.pop(opts, :tls_mode, :enabled)
