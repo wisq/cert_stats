@@ -54,6 +54,10 @@ defmodule CertStats.Statsd do
 
   def record_watchdog(healthy, total, statsd \\ default_name())
 
+  def record_watchdog(healthy, total, {:stub, pid}) do
+    send(pid, {:record_watchdog, healthy, total})
+  end
+
   def record_watchdog(0, 0, _) do
     Logger.warning("Watchdog: No registered clients.")
   end
